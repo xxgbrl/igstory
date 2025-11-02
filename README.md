@@ -40,7 +40,7 @@ An advanced Instagram bot for automatically viewing stories and interacting with
 
 1.  **Clone the repository:**
     ```bash
-    git clone <your-repository-url>
+    git clone https://github.com/cenmurong/igstory
     cd igstory
     ```
 
