@@ -13,6 +13,22 @@ USER_AGENTS = [
     "Instagram 76.0.0.15.395 Android (24/7.0; 640dpi; 1440x2560; samsung; SM-G930F; herolte; samsungexynos8890; en_US)", # Samsung S7
 ]
 
+def _perform_login_with_retries(cl: Client, config: dict) -> bool:
+    """
+    Attempts to log in up to 3 times with a delay between failures.
+    """
+    login_attempts = 0
+    while login_attempts < 3:
+        if handle_login(cl, config):
+            return True
+        login_attempts += 1
+        if login_attempts < 3:
+            log_message(f"Login failed. Retrying in 60 seconds... (Attempt {login_attempts}/3)")
+            time.sleep(60)
+    
+    log_message("Login failed after 3 attempts. Stopping bot.")
+    return False
+
 def run_worker(config: dict, task_function):
     """
     Manages the main bot loop, including login, re-login, and interval waits.
@@ -31,17 +47,11 @@ def run_worker(config: dict, task_function):
 
     cl.delay_range = [8, 16]
 
-    login_attempts = 0
-    while login_attempts < 3:
-        if handle_login(cl, config):
-            break  
-        login_attempts += 1
-        if login_attempts < 3:
-            log_message(f"Initial login failed. Retrying in 60 seconds... (Attempt {login_attempts}/3)")
-            time.sleep(60)
-    else:
-        log_message("Initial login failed after 3 attempts. Stopping bot.")
+    if not _perform_login_with_retries(cl, config):
         return
+
+    telegram_token = config.get('TELEGRAM_TOKEN')
+    telegram_chat_id = config.get('TELEGRAM_CHAT')
 
     while True:
         try:
@@ -51,14 +61,13 @@ def run_worker(config: dict, task_function):
             wait_end = time.time() + config['INTERVAL']
             telegram_monitor.next_run_time = time.strftime("%H:%M:%S", time.localtime(wait_end))
             while time.time() < wait_end:
-                telegram_monitor.check_commands(config['TELEGRAM_TOKEN'], config['TELEGRAM_CHAT'])
-                telegram_monitor.send_health_ping(config['TELEGRAM_TOKEN'], config['TELEGRAM_CHAT'])
+                telegram_monitor.check_commands(telegram_token, telegram_chat_id)
+                telegram_monitor.send_health_ping(telegram_token, telegram_chat_id)
                 time.sleep(5)
         except LoginRequired as e:
             log_message(f"Session dead or expired: {e}. Attempting to re-login...")
             config['SESSION_ID'] = None
-            if not handle_login(cl, config):
-                log_message("Re-login failed, bot stopping.")
+            if not _perform_login_with_retries(cl, config):
                 break
         except requests.exceptions.ConnectionError as e:
             log_message(f"Connection issue: {e}. Retrying in 5 minutes.")
