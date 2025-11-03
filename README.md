@@ -5,7 +5,11 @@
  //_\\/ / \ \ / /\//  // \ \ / / / /\/_\  \ \/  \/ / \ \   / /\//  // \//\_ _/
 /  _  \ \_/ // / / \_//   \ V /\/ /_//__   \  /\  /  _\ \ / / / \_// _  \ / \ 
 \_/ \_/\___/ \/  \___/     \_/\____/\__/    \/  \/   \__/ \/  \___/\/ \_/ \_/ 
+<<<<<<< HEAD
              AUTO VIEWER + LOVE FROM FOLLOWERS - V.3
+=======
+             AUTO VIEWER + LOVE FROM FOLLOWERS - V.2.4
+>>>>>>> c381f44 (update README.me)
 ```
 
 An advanced Instagram bot for automatically viewing stories and interacting with users. Built with a robust, modular, and resilient architecture in Python.
@@ -20,10 +24,14 @@ An advanced Instagram bot for automatically viewing stories and interacting with
     - `Hybrid: View (Following) + Love (Followers)`
     - `Hybrid: View (Following) + View (Followers)`
 - **Robust Login System**: Prioritizes `SESSION_ID` for stable sessions, falls back to username/password, and supports interactive handling for 2FA/Challenge codes.
+- **Centralized Login & Session Sync**: Performs a single, central login for hybrid modes and automatically syncs the new `SESSION_ID` back to your configuration file after a successful login.
+- **Comprehensive Telegram Monitoring**:
   - Get real-time bot status with the `/status` command, including server CPU/RAM usage.
   - Receive startup alerts, periodic "health pings", and critical failure notifications.
   - Get a summary notification after each operational cycle.
+- **Smart Error Handling**: Intelligently handles common issues like session expiries and network connection errors to ensure maximum uptime.
 - **Interactive Setup**: A user-friendly command-line interface guides you through the initial setup process.
+- **Anti-Detection Measures**:
   - **Customizable Delays**: Fully configurable delays between actions for each mode to better mimic human behavior.
   - User-Agent rotation on each startup.
   - **Proxy Support**: Route traffic through a proxy for enhanced anonymity.
@@ -102,10 +110,12 @@ igstory/
 ├── configs/              # Stores all .env configuration files
 ├── core/                 # Core application logic
 │   ├── auth.py           # Handles login and session authentication
-│   ├── follower_viewer.py# Task logic for "Follower Viewer" mode
+│   ├── actions.py        # Specific interaction functions (like, view)
+│   ├── target_processor.py # Generic logic for processing a target's followers
 │   ├── history.py        # Manages interaction history (seen/loved)
 │   ├── hybrid.py         # Handles parallel task execution
-│   ├── lover.py          # Task logic for "Lover" mode
+│   ├── lover.py          # Wrapper for "Lover" mode
+│   ├── follower_viewer.py# Wrapper for "Follower Viewer" mode
 │   ├── viewer.py         # Task logic for "Viewer" mode
 │   └── worker.py         # Generic worker for single-threaded modes
 ├── utils/                # Utility modules
