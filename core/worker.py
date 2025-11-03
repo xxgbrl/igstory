@@ -2,15 +2,15 @@ import time
 import random
 from instagrapi import Client
 import requests
-from instagrapi.exceptions import LoginRequired
+from instagrapi.exceptions import LoginRequired, ChallengeRequired
 from utils.logger import log_message
 from utils.telegram import telegram_monitor
 from .auth import handle_login
 
 USER_AGENTS = [
-    "Instagram 153.0.0.34.96 Android (28/9; 420dpi; 1080x2220; samsung; SM-G960F; starlte; samsungexynos9810; en_US)", # Samsung S9
-    "Instagram 113.0.0.39.122 Android (24/7.0; 420dpi; 1080x1920; samsung; SM-G950F; dreamlte; samsungexynos8895; en_US)", # Samsung S8
-    "Instagram 76.0.0.15.395 Android (24/7.0; 640dpi; 1440x2560; samsung; SM-G930F; herolte; samsungexynos8890; en_US)", # Samsung S7
+    "Instagram 289.0.0.77.109 Android (33/13; 420dpi; 1080x2400; samsung; SM-G998B; crownlte; qcom; en_US)",
+    "Instagram 301.0.0.81.110 Android (34/14; 440dpi; 1080x2408; google; Pixel 7; panther; qcom; en_US)",
+    "Instagram 295.0.0.32.110 Android (33/13; 480dpi; 1080x2400; OnePlus; ONEPLUS A6013; OnePlus6T; qcom; en_GB)",
 ]
 
 def _perform_login_with_retries(cl: Client, config: dict) -> bool:
@@ -19,12 +19,19 @@ def _perform_login_with_retries(cl: Client, config: dict) -> bool:
     """
     login_attempts = 0
     while login_attempts < 3:
-        if handle_login(cl, config):
-            return True
-        login_attempts += 1
-        if login_attempts < 3:
-            log_message(f"Login failed. Retrying in 60 seconds... (Attempt {login_attempts}/3)")
+        try:
+            if handle_login(cl, config):
+                return True
+           
+            login_attempts += 1
+            if login_attempts < 3:
+                log_message(f"Login failed. Retrying in 60 seconds... (Attempt {login_attempts} of 3)")
+                time.sleep(60)
+        except ChallengeRequired:
+            log_message("Waiting 60 seconds for you to approve the login...")
             time.sleep(60)
+           
+            continue
     
     log_message("Login failed after 3 attempts. Stopping bot.")
     return False
@@ -66,7 +73,6 @@ def run_worker(config: dict, task_function):
                 time.sleep(5)
         except LoginRequired as e:
             log_message(f"Session dead or expired: {e}. Attempting to re-login...")
-            config['SESSION_ID'] = None
             if not _perform_login_with_retries(cl, config):
                 break
         except requests.exceptions.ConnectionError as e:
