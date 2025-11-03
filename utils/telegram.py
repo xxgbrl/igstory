@@ -61,7 +61,7 @@ class TelegramMonitor:
             f"System Info\n"
             f"  🐍 Python: `{py_version}`\n"
             f"  💻 Platform: `{os_info}`\n"
-            f"  🧠 *CPU Usage: `{cpu_usage}%`\n"
+            f"  🧠 CPU Usage: `{cpu_usage}%`\n"
             f"  💾 RAM Usage: `{ram_usage}%`\n\n"
             f"Latest Logs\n"
             f"```\n" + "\n".join(list(self.logs)[-7:]) + "\n```"
